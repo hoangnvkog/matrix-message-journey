@@ -1,0 +1,20 @@
+{
+  "title": "Happy Birthday",
+  "messages": [
+    {
+      "text": "Hello.",
+      "hold": 3000
+    },
+    {
+      "text": "I have something to tell you.",
+      "hold": 3000
+    },
+    {
+      "text": "Happy Birthday!",
+      "hold": 5000
+    }
+  ],
+  "ending": {
+    "image": "images/final.jpg"
+  }
+}

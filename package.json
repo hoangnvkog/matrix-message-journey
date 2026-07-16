@@ -1,0 +1,30 @@
+{
+  "name": "matrix-rain-story",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src/",
+    "lint:fix": "eslint --fix src/",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/"
+  },
+  "devDependencies": {
+    "@types/howler": "^2.2.13",
+    "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "prettier": "^3.9.5",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.64.0",
+    "vite": "^8.1.1"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0",
+    "howler": "^2.2.4"
+  }
+}
