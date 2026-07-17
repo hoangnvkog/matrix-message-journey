@@ -90,7 +90,7 @@ export class MatrixEngine {
       }),
     );
 
-    // Gather placeholder → Reveal
+    // Gather placeholder → immediate transition to Reveal
     this.stateMachine.register(
       AppState.Gather,
       new (class implements StateHandler {
@@ -99,10 +99,9 @@ export class MatrixEngine {
           this.engine = engine;
         }
         enter(): void {
-          console.log("[State] → Gather");
-          setTimeout(() => {
-            this.engine.getStateMachine().transitionTo(AppState.Reveal);
-          }, 800);
+          console.log("[State] → Gather → Reveal (immediate)");
+          // Transition immediately — no artificial delay
+          this.engine.getStateMachine().transitionTo(AppState.Reveal);
         }
         execute(_dt: number): void {}
         exit(): void {}
