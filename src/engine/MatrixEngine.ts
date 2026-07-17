@@ -297,6 +297,7 @@ export class MatrixEngine {
 
   private update(dt: number): void {
     this.stateMachine.update(dt);
+    this.rain.update(dt); // continuous background animation
 
     const ctx = this.renderer.getContext();
 
