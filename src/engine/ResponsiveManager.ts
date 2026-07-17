@@ -56,9 +56,9 @@ export class ResponsiveManager {
     switch (type) {
       case "phone":
         return {
-          glyphSize: 10,
+          glyphSize: 11,
           fontSize: 20,
-          density: 0.7,
+          density: 1.0,
           trailLength: Math.max(8, Math.floor(base.trailLength * 0.5)),
           columnGap: 1,
         };
@@ -66,7 +66,7 @@ export class ResponsiveManager {
         return {
           glyphSize: 13,
           fontSize: 32,
-          density: 0.85,
+          density: 0.95,
           trailLength: Math.max(12, Math.floor(base.trailLength * 0.7)),
           columnGap: 2,
         };

@@ -160,7 +160,14 @@ export class MatrixEngine {
       new (class implements StateHandler {
         private engine: MatrixEngine;
         private lastInputAt = 0;
-        private onPointer = (): void => this.handleInput();
+        private onPointer = (e: PointerEvent): void => {
+          e.preventDefault();
+          this.handleInput();
+        };
+        private onTouch = (e: TouchEvent): void => {
+          e.preventDefault();
+          this.handleInput();
+        };
         private onKey = (e: KeyboardEvent): void => {
           if (e.code === "Space" || e.code === "Enter") {
             e.preventDefault();
@@ -186,6 +193,8 @@ export class MatrixEngine {
         execute(_dt: number): void {}
         exit(): void {
           window.removeEventListener("pointerdown", this.onPointer);
+          window.removeEventListener("touchstart", this.onTouch);
+          window.removeEventListener("touchend", this.onTouch);
           window.removeEventListener("keydown", this.onKey);
         }
       })(this),

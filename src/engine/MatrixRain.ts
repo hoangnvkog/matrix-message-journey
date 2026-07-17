@@ -13,7 +13,6 @@ const FONT_FAMILY = settings.reveal.font;
  */
 export class MatrixRain {
   private pool: ParticlePool;
-  private density = 1;
   private cachedFont = "";
 
   constructor() {
@@ -21,7 +20,6 @@ export class MatrixRain {
   }
 
   applyConfig(config: ResponsiveConfig): void {
-    this.density = config.density;
     this.cachedFont = `${config.glyphSize}px ${FONT_FAMILY}`;
   }
 
@@ -50,8 +48,6 @@ export class MatrixRain {
     const cells = this.pool.getCells();
     const count = this.pool.getCellCount();
 
-    const density = this.density;
-
     ctx.font = this.cachedFont;
     ctx.textBaseline = "top";
 
@@ -62,8 +58,6 @@ export class MatrixRain {
     for (let i = 0; i < count; i++) {
       const cell = cells[i];
       if (!cell) continue;
-      if (i / count > density) continue;
-
       const fade = 0.3 + Math.random() * 0.4; // subtle variation
       ctx.fillStyle = `rgba(0, 255, 65, ${fade.toFixed(2)})`;
       ctx.fillText(cell.char, cell.x, cell.y);

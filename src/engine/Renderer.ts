@@ -45,7 +45,7 @@ export class Renderer {
     }
     this.ctx = ctx;
 
-    this.dpr = settings.canvas.pixelRatio;
+    this.dpr = Math.min(Math.max(settings.canvas.pixelRatio, 1), 3);
 
     this.boundFrame = this.frame.bind(this);
     this.resize();
@@ -57,7 +57,7 @@ export class Renderer {
   /* ------------------------------------------------------------------ */
 
   resize(): void {
-    this.dpr = settings.canvas.pixelRatio;
+    this.dpr = Math.min(Math.max(settings.canvas.pixelRatio, 1), 3);
     this.pixelWidth = window.innerWidth * this.dpr;
     this.pixelHeight = window.innerHeight * this.dpr;
     this.width = window.innerWidth;
