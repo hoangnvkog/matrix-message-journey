@@ -120,11 +120,46 @@ export class MessageRenderer {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
+    // Compute text bounding box for the dark backdrop
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+    const len = this.chars.length;
+
+    for (let i = 0; i < len; i++) {
+      const pos = this.positions[i];
+      if (!pos) continue;
+      if (pos.x < minX) minX = pos.x;
+      if (pos.y < minY) minY = pos.y;
+      if (pos.x + CHAR_WIDTH > maxX) maxX = pos.x + CHAR_WIDTH;
+      if (pos.y + FONT_SIZE > maxY) maxY = pos.y + FONT_SIZE;
+    }
+
+    if (minX < Infinity) {
+      const padX = 24;
+      const padY = 16;
+      // Radial gradient: dark center → transparent edges
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const rx = (maxX - minX) / 2 + padX;
+      const ry = (maxY - minY) / 2 + padY;
+      const radius = Math.max(rx, ry);
+
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      grad.addColorStop(0, "rgba(0, 0, 0, 0.75)");
+      grad.addColorStop(0.6, "rgba(0, 0, 0, 0.5)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+      ctx.restore();
+    }
+
     ctx.font = CACHED_FONT;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
-
-    const len = this.chars.length;
 
     // Pass 1: Scrambling characters (no shadow)
     ctx.shadowBlur = 0;

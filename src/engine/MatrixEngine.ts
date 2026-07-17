@@ -120,6 +120,7 @@ export class MatrixEngine {
         }
         enter(): void {
           this.engine.getAudio().play("reveal");
+          this.engine.setRainAlpha(0.25);
           const msg = this.engine.getTimeline().getCurrentMessage();
           if (!msg) return;
 
@@ -150,6 +151,7 @@ export class MatrixEngine {
           this.scene?.exit();
           this.scene = null;
           this.engine.setActiveMessageScene(null);
+          this.engine.setRainAlpha(1);
         }
       })(this),
     );
@@ -211,6 +213,7 @@ export class MatrixEngine {
         }
         enter(): void {
           this.engine.getAudio().play("scatter");
+          this.engine.setRainAlpha(0.3);
           const r = this.engine.getRenderer();
           this.scene = new ScatterScene(
             r.width,
@@ -231,6 +234,7 @@ export class MatrixEngine {
           this.scene?.exit();
           this.scene = null;
           this.engine.setActiveScatterScene(null);
+          this.engine.setRainAlpha(1);
         }
       })(this),
     );
