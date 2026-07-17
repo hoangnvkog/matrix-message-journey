@@ -137,8 +137,8 @@ export class MessageRenderer {
     }
 
     if (minX < Infinity) {
-      const padX = 40;
-      const padY = 30;
+      const padX = 48;
+      const padY = 36;
       const bx = minX - padX;
       const by = minY - padY;
       const bw = maxX - minX + padX * 2;
@@ -146,19 +146,17 @@ export class MessageRenderer {
 
       ctx.save();
 
-      // Solid dark backdrop — high contrast
-      ctx.fillStyle = "rgba(0, 0, 0, 0.82)";
+      // FULL opaque black backdrop — completely blocks rain
+      ctx.fillStyle = "#000000";
       ctx.fillRect(bx, by, bw, bh);
 
-      // Subtle radial glow at center
-      const cx = (minX + maxX) / 2;
-      const cy = (minY + maxY) / 2;
-      const radius = Math.max(bw, bh) * 0.7;
-      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-      grad.addColorStop(0, "rgba(0, 40, 10, 0.3)");
-      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(bx, by, bw, bh);
+      // Matrix green border (1px glow)
+      ctx.strokeStyle = "rgba(0, 255, 65, 0.5)";
+      ctx.lineWidth = 1;
+      ctx.shadowColor = "#00ff41";
+      ctx.shadowBlur = 8;
+      ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+      ctx.shadowBlur = 0;
 
       ctx.restore();
     }

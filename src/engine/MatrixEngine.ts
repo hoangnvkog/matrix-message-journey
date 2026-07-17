@@ -120,7 +120,7 @@ export class MatrixEngine {
         }
         enter(): void {
           this.engine.getAudio().play("reveal");
-          this.engine.setRainAlpha(0.12);
+          this.engine.setRainAlpha(0.03);
           const msg = this.engine.getTimeline().getCurrentMessage();
           if (!msg) return;
 
@@ -213,7 +213,7 @@ export class MatrixEngine {
         }
         enter(): void {
           this.engine.getAudio().play("scatter");
-          this.engine.setRainAlpha(0.15);
+          this.engine.setRainAlpha(0.03);
           const r = this.engine.getRenderer();
           this.scene = new ScatterScene(
             r.width,
