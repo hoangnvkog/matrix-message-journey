@@ -154,10 +154,41 @@ export class MatrixEngine {
       })(this),
     );
 
-    // WaitingInput placeholder
+    // WaitingInput — wait for user click/tap/space, then advance to Scatter
     this.stateMachine.register(
       AppState.WaitingInput,
-      createPlaceholderHandler("WaitingInput"),
+      new (class implements StateHandler {
+        private engine: MatrixEngine;
+        private lastInputAt = 0;
+        private onPointer = (): void => this.handleInput();
+        private onKey = (e: KeyboardEvent): void => {
+          if (e.code === "Space" || e.code === "Enter") {
+            e.preventDefault();
+            this.handleInput();
+          }
+        };
+        constructor(engine: MatrixEngine) {
+          this.engine = engine;
+        }
+        private handleInput(): void {
+          const now = performance.now();
+          if (now - this.lastInputAt < 250) return;
+          this.lastInputAt = now;
+          this.engine.getStateMachine().transitionTo(AppState.Scatter);
+        }
+        enter(): void {
+          console.log("[State] → WaitingInput (click to continue)");
+          window.addEventListener("pointerdown", this.onPointer, {
+            passive: true,
+          });
+          window.addEventListener("keydown", this.onKey);
+        }
+        execute(_dt: number): void {}
+        exit(): void {
+          window.removeEventListener("pointerdown", this.onPointer);
+          window.removeEventListener("keydown", this.onKey);
+        }
+      })(this),
     );
 
     // Scatter
@@ -249,7 +280,13 @@ export class MatrixEngine {
   }
 
   async init(): Promise<void> {
-    await this.timeline.load("src/data/story.json");
+    // story.json lives in public/data/ so Vite copies it to dist/data/story.json
+    // Use an absolute path derived from the base URL to avoid subpath issues on GitHub Pages.
+    const storyPath = `${import.meta.env.BASE_URL}data/story.json`.replace(
+      /\/+/g,
+      "/",
+    );
+    await this.timeline.load(storyPath);
     this.responsive.update(this.renderer.width, this.renderer.height);
     this.rain.applyConfig(this.responsive.getConfig());
     this.rain.init(this.renderer.width, this.renderer.height);

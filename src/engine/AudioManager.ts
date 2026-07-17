@@ -24,10 +24,10 @@ export class AudioManager {
     if (this.initialized) return;
 
     const soundDefs: [SoundName, string, number][] = [
-      ["rain", "assets/audio/rain.m4a", settings.audio.rainVolume],
-      ["reveal", "assets/audio/reveal.m4a", settings.audio.revealVolume],
-      ["scatter", "assets/audio/scatter.m4a", settings.audio.scatterVolume],
-      ["ending", "assets/audio/ending.m4a", settings.audio.endingVolume],
+      ["rain", "assets/audio/rain.mp3", settings.audio.rainVolume],
+      ["reveal", "assets/audio/reveal.mp3", settings.audio.revealVolume],
+      ["scatter", "assets/audio/scatter.mp3", settings.audio.scatterVolume],
+      ["ending", "assets/audio/ending.mp3", settings.audio.endingVolume],
     ];
 
     for (const [name, src, volume] of soundDefs) {
