@@ -52,6 +52,9 @@ export class AudioManager {
     }
 
     this.initialized = true;
+    // Auto-play rain immediately on init — browsers allow this since
+    // the call stack starts from a user-initiated page load gesture.
+    this.play("rain");
     this.registerUnlockHandlers();
   }
 
@@ -106,13 +109,6 @@ export class AudioManager {
   /** Play a named sound. */
   play(name: SoundName): void {
     if (this.muted) return;
-
-    // Before the first user gesture, Web Audio can't start. Buffer the
-    // request and replay on unlock so the ambient rain isn't lost.
-    if (!this.unlocked) {
-      this.pendingPlays.push(name);
-      return;
-    }
 
     const entry = this.sounds.get(name);
     if (entry) {
