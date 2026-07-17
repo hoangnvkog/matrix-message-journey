@@ -186,10 +186,12 @@ export class MatrixEngine {
           this.engine.getStateMachine().transitionTo(AppState.Scatter);
         }
         enter(): void {
-          console.log("[State] → WaitingInput (click to continue)");
-          window.addEventListener("pointerdown", this.onPointer, {
-            passive: true,
-          });
+          console.log("[State] → WaitingInput (tap to continue)");
+          // Ensure audio unlock on first user interaction
+          this.engine.getAudio().ensureUnlocked();
+          window.addEventListener("pointerdown", this.onPointer, { passive: false });
+          window.addEventListener("touchstart", this.onTouch, { passive: false });
+          window.addEventListener("touchend", this.onTouch, { passive: false });
           window.addEventListener("keydown", this.onKey);
         }
         execute(_dt: number): void {}

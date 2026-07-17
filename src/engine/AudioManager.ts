@@ -91,11 +91,15 @@ export class AudioManager {
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("keydown", unlock);
       window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("touchend", unlock);
+      window.removeEventListener("click", unlock);
     };
 
     window.addEventListener("pointerdown", unlock, { passive: true });
     window.addEventListener("keydown", unlock);
     window.addEventListener("touchstart", unlock, { passive: true });
+    window.addEventListener("touchend", unlock, { passive: true });
+    window.addEventListener("click", unlock);
   }
 
   /** Play a named sound. */
@@ -155,5 +159,31 @@ export class AudioManager {
   /** Whether the audio system has been unlocked by a user gesture. */
   isUnlocked(): boolean {
     return this.unlocked;
+  }
+
+  /** Ensure audio is unlocked - call on first user interaction. */
+  ensureUnlocked(): void {
+    if (!this.unlocked) {
+      // Trigger unlock sequence
+      try {
+        if (Howler.ctx && Howler.ctx.state === "suspended") {
+          void Howler.ctx.resume();
+        }
+      } catch {
+        /* ignore */
+      }
+      this.unlocked = true;
+      
+      // Drain queued plays - only re-trigger rain
+      if (!this.muted) {
+        const queued = this.pendingPlays;
+        this.pendingPlays = [];
+        if (queued.includes("rain")) {
+          this.play("rain");
+        }
+      } else {
+        this.pendingPlays = [];
+      }
+    }
   }
 }
