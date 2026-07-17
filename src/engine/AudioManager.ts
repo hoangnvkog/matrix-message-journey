@@ -42,6 +42,7 @@ export class AudioManager {
         volume: volume,
         loop: name === "rain",
         preload: true,
+        html5: true, // Use HTML5 Audio for better mobile compatibility
         onloaderror: (_id: unknown, err: unknown): void => {
           console.warn(`Audio "${name}" load error:`, err);
         },
@@ -115,6 +116,8 @@ export class AudioManager {
 
     const entry = this.sounds.get(name);
     if (entry) {
+      // Stop first to handle re-play (e.g. rain loop restart)
+      entry.howl.stop();
       entry.howl.volume(entry.volume);
       entry.howl.play();
     }
@@ -140,6 +143,9 @@ export class AudioManager {
     this.muted = !this.muted;
     if (this.muted) {
       this.stopAll();
+    } else {
+      // Ensure audio is unlocked when unmuting
+      this.ensureUnlocked();
     }
     return this.muted;
   }

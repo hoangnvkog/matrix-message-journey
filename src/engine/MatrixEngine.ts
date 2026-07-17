@@ -167,6 +167,7 @@ export class MatrixEngine {
           this.handleInput();
         };
         private onTouch = (e: TouchEvent): void => {
+          // Prevent default to stop ghost clicks and zoom
           e.preventDefault();
           this.handleInput();
         };
@@ -176,23 +177,31 @@ export class MatrixEngine {
             this.handleInput();
           }
         };
+        private onClick = (): void => {
+          this.handleInput();
+        };
         constructor(engine: MatrixEngine) {
           this.engine = engine;
         }
         private handleInput(): void {
           const now = performance.now();
-          if (now - this.lastInputAt < 250) return;
+          if (now - this.lastInputAt < 300) return;
           this.lastInputAt = now;
+          // Ensure audio is unlocked on every user interaction
+          this.engine.getAudio().ensureUnlocked();
           this.engine.getStateMachine().transitionTo(AppState.Scatter);
         }
         enter(): void {
           console.log("[State] → WaitingInput (tap to continue)");
-          // Ensure audio unlock on first user interaction
+          // Ensure audio is unlocked on enter (first interaction)
           this.engine.getAudio().ensureUnlocked();
+          // Touch events — use { passive: false } so we can call preventDefault()
           window.addEventListener("pointerdown", this.onPointer, { passive: false });
           window.addEventListener("touchstart", this.onTouch, { passive: false });
           window.addEventListener("touchend", this.onTouch, { passive: false });
           window.addEventListener("keydown", this.onKey);
+          // Click as fallback (fires after touch on mobile)
+          window.addEventListener("click", this.onClick);
         }
         execute(_dt: number): void {}
         exit(): void {
@@ -200,6 +209,7 @@ export class MatrixEngine {
           window.removeEventListener("touchstart", this.onTouch);
           window.removeEventListener("touchend", this.onTouch);
           window.removeEventListener("keydown", this.onKey);
+          window.removeEventListener("click", this.onClick);
         }
       })(this),
     );
