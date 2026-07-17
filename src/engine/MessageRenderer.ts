@@ -135,8 +135,8 @@ export class MessageRenderer {
     }
 
     if (minX < Infinity) {
-      const padX = 56;
-      const padY = 40;
+      const padX = 40;
+      const padY = 30;
       const bx = minX - padX;
       const by = minY - padY;
       const bw = maxX - minX + padX * 2;
@@ -148,10 +148,15 @@ export class MessageRenderer {
       ctx.fillStyle = "#000000";
       ctx.fillRect(bx, by, bw, bh);
 
-      // Clean green border — no shadow/blur
-      ctx.strokeStyle = "rgba(0, 255, 65, 0.6)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+      // Subtle radial glow at center
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const radius = Math.max(bw, bh) * 0.7;
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      grad.addColorStop(0, "rgba(0, 40, 10, 0.25)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(bx, by, bw, bh);
 
       ctx.restore();
     }
@@ -159,11 +164,10 @@ export class MessageRenderer {
     ctx.font = CACHED_FONT;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
-    ctx.shadowBlur = 0;
-    ctx.shadowColor = "transparent";
 
-    // Pass 1: Scrambling characters — green, no shadow
-    ctx.fillStyle = "rgba(0, 255, 65, 0.8)";
+    // Pass 1: Scrambling characters (no shadow)
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(0, 255, 65, 0.5)";
 
     for (let i = 0; i < len; i++) {
       const ch = this.chars[i];
@@ -172,10 +176,12 @@ export class MessageRenderer {
       ctx.fillText(ch.current, pos.x, pos.y);
     }
 
-    // Pass 2: Settled characters — BRIGHT WHITE, crisp stroke, NO shadow/glow
-    ctx.fillStyle = "#ffffff";
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 2;
+    // Pass 2: Settled characters — Matrix green + subtle glow + black stroke for crispness
+    ctx.shadowColor = "#00ff41";
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = "#00ff41";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.lineWidth = 1.5;
 
     for (let i = 0; i < len; i++) {
       const ch = this.chars[i];
@@ -184,6 +190,9 @@ export class MessageRenderer {
       ctx.strokeText(ch.current, pos.x, pos.y);
       ctx.fillText(ch.current, pos.x, pos.y);
     }
+
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
   }
 
   isComplete(): boolean {
