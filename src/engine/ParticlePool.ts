@@ -1,106 +1,114 @@
 import { settings } from "../config/settings.js";
 
 /**
- * A single falling column of Matrix glyphs.
+ * A single cell in the full-screen Matrix rain grid.
  *
- * Pre-allocated. No new allocations during the render loop.
+ * Each cell holds a glyph that scrambles independently.
+ * No falling motion — static position, dynamic glyph.
  */
-export class RainColumn {
+export class RainCell {
   x = 0;
   y = 0;
-  speed = 0;
-  chars: string[] = [];
-  trailLength = 0;
-  maxTrailLength = 0;
-  active = false;
+  char = "";
   scrambleInterval = 0;
   scrambleTimer = 0;
+  settled = false;
 
-  init(columnIndex: number, totalColumns: number, canvasHeight: number): void {
-    this.x = columnIndex * (settings.rain.glyphSize + settings.rain.columnGap);
-    this.y =
-      -Math.random() * canvasHeight * 0.5 - Math.random() * canvasHeight * 0.3;
-    this.speed = settings.rain.speed * (60 + Math.random() * 40);
-    this.maxTrailLength =
-      settings.rain.trailLength +
-      Math.floor(Math.random() * settings.rain.trailLength * 0.5);
-    this.trailLength = this.maxTrailLength;
-    this.active = true;
-    this.scrambleInterval = 0.05 + Math.random() * 0.1;
-    this.scrambleTimer = 0;
-
-    this.chars.length = this.maxTrailLength + 2;
-    const glyphSet = settings.glyphs;
-    for (let i = 0; i < this.chars.length; i++) {
-      this.chars[i] =
-        glyphSet[Math.floor(Math.random() * glyphSet.length)] ?? "";
-    }
-    void totalColumns;
+  init(x: number, y: number): void {
+    this.x = x;
+    this.y = y;
+    this.scrambleInterval = 0.08 + Math.random() * 0.15; // 80-230ms
+    this.scrambleTimer = Math.random() * this.scrambleInterval;
+    this.settled = false;
+    this.randomizeChar();
   }
 
-  scrambleGlyphs(): void {
+  randomizeChar(): void {
     const glyphSet = settings.glyphs;
-    const scrambleDepth = Math.min(3, this.chars.length);
-    for (let i = 0; i < scrambleDepth; i++) {
-      this.chars[i] =
-        glyphSet[Math.floor(Math.random() * glyphSet.length)] ?? "";
+    this.char = glyphSet[Math.floor(Math.random() * glyphSet.length)] ?? "";
+  }
+
+  /** Called every frame. Randomly scrambles the glyph. */
+  update(dt: number): void {
+    this.scrambleTimer += dt;
+    if (this.scrambleTimer >= this.scrambleInterval) {
+      this.scrambleTimer = 0;
+      this.scrambleInterval = 0.08 + Math.random() * 0.15;
+      this.randomizeChar();
     }
   }
 }
 
 /**
- * Manages a pool of RainColumn objects.
+ * Manages a grid of RainCell objects covering the entire canvas.
  *
- * All columns are allocated once and reused every frame.
- * Zero allocations during the render loop.
+ * All cells are allocated once and reused. Zero allocations per frame.
  */
 export class ParticlePool {
-  private columns: RainColumn[] = [];
-  private columnCount = 0;
+  private cells: RainCell[] = [];
+  private cols = 0;
+  private rows = 0;
   private glyphSize = 0;
 
   init(canvasWidth: number, canvasHeight: number): void {
     this.glyphSize = settings.rain.glyphSize;
-    this.columnCount = Math.ceil(
-      canvasWidth / (this.glyphSize + settings.rain.columnGap),
-    );
+    const gap = settings.rain.columnGap;
+    this.cols = Math.ceil(canvasWidth / (this.glyphSize + gap));
+    this.rows = Math.ceil(canvasHeight / (this.glyphSize + gap));
 
-    while (this.columns.length < this.columnCount) {
-      this.columns.push(new RainColumn());
+    const total = this.cols * this.rows;
+    while (this.cells.length < total) {
+      this.cells.push(new RainCell());
     }
 
-    for (let i = 0; i < this.columnCount; i++) {
-      const col = this.columns[i];
-      if (col) {
-        col.init(i, this.columnCount, canvasHeight);
+    let idx = 0;
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        const cell = this.cells[idx++];
+        if (cell) {
+          cell.init(col * (this.glyphSize + gap), row * (this.glyphSize + gap));
+        }
       }
     }
   }
 
   resize(canvasWidth: number, canvasHeight: number): void {
     this.glyphSize = settings.rain.glyphSize;
-    this.columnCount = Math.ceil(
-      canvasWidth / (this.glyphSize + settings.rain.columnGap),
-    );
+    const gap = settings.rain.columnGap;
+    this.cols = Math.ceil(canvasWidth / (this.glyphSize + gap));
+    this.rows = Math.ceil(canvasHeight / (this.glyphSize + gap));
 
-    while (this.columns.length < this.columnCount) {
-      this.columns.push(new RainColumn());
+    const total = this.cols * this.rows;
+    while (this.cells.length < total) {
+      this.cells.push(new RainCell());
     }
 
-    for (let i = 0; i < this.columnCount; i++) {
-      const col = this.columns[i];
-      if (col) {
-        col.init(i, this.columnCount, canvasHeight);
+    let idx = 0;
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        const cell = this.cells[idx++];
+        if (cell) {
+          cell.init(col * (this.glyphSize + gap), row * (this.glyphSize + gap));
+        }
       }
     }
   }
 
-  getColumns(): RainColumn[] {
-    return this.columns;
+  /** Get all cells as a flat array. */
+  getCells(): RainCell[] {
+    return this.cells;
   }
 
-  getColumnCount(): number {
-    return this.columnCount;
+  getCellCount(): number {
+    return this.cols * this.rows;
+  }
+
+  getCols(): number {
+    return this.cols;
+  }
+
+  getRows(): number {
+    return this.rows;
   }
 
   getGlyphSize(): number {
