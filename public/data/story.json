@@ -1,17 +1,17 @@
 {
-  "title": "Happy Birthday",
+  "title": "Autumn In Saigon",
   "messages": [
     {
-      "text": "Hello.",
-      "hold": 3000
-    },
-    {
-      "text": "I have something to tell you.",
-      "hold": 3000
-    },
-    {
-      "text": "Happy Birthday!",
+      "text": "Thiên thần",
       "hold": 5000
+    },
+    {
+      "text": "Đáng yêu",
+      "hold": 5000
+    },
+    {
+      "text": "Luv u!",
+      "hold": 8000
     }
   ],
   "ending": {
