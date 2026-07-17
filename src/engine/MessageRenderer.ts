@@ -118,56 +118,19 @@ export class MessageRenderer {
   }
 
   render(ctx: CanvasRenderingContext2D): void {
-    // Compute text bounding box for the dark backdrop
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
     const len = this.chars.length;
-
-    for (let i = 0; i < len; i++) {
-      const pos = this.positions[i];
-      if (!pos) continue;
-      if (pos.x < minX) minX = pos.x;
-      if (pos.y < minY) minY = pos.y;
-      if (pos.x + CHAR_WIDTH > maxX) maxX = pos.x + CHAR_WIDTH;
-      if (pos.y + FONT_SIZE > maxY) maxY = pos.y + FONT_SIZE;
-    }
-
-    if (minX < Infinity) {
-      const padX = 40;
-      const padY = 30;
-      const bx = minX - padX;
-      const by = minY - padY;
-      const bw = maxX - minX + padX * 2;
-      const bh = maxY - minY + padY * 2;
-
-      ctx.save();
-
-      // FULL opaque black backdrop — blocks rain completely
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(bx, by, bw, bh);
-
-      // Subtle radial glow at center
-      const cx = (minX + maxX) / 2;
-      const cy = (minY + maxY) / 2;
-      const radius = Math.max(bw, bh) * 0.7;
-      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-      grad.addColorStop(0, "rgba(0, 40, 10, 0.25)");
-      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(bx, by, bw, bh);
-
-      ctx.restore();
-    }
 
     ctx.font = CACHED_FONT;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
 
-    // Pass 1: Scrambling characters (no shadow)
+    // No backdrop — text floats over Matrix rain
+    // No shadow/glow — keep text crisp and readable
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "rgba(0, 255, 65, 0.5)";
+    ctx.shadowColor = "transparent";
+
+    // Pass 1: Scrambling characters (dimmed)
+    ctx.fillStyle = "rgba(0, 255, 65, 0.4)";
 
     for (let i = 0; i < len; i++) {
       const ch = this.chars[i];
@@ -176,12 +139,10 @@ export class MessageRenderer {
       ctx.fillText(ch.current, pos.x, pos.y);
     }
 
-    // Pass 2: Settled characters — Matrix green + subtle glow + black stroke for crispness
-    ctx.shadowColor = "#00ff41";
-    ctx.shadowBlur = 4;
+    // Pass 2: Settled characters — bright, clean, with subtle stroke for contrast
     ctx.fillStyle = "#00ff41";
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
+    ctx.lineWidth = 2;
 
     for (let i = 0; i < len; i++) {
       const ch = this.chars[i];
@@ -190,9 +151,6 @@ export class MessageRenderer {
       ctx.strokeText(ch.current, pos.x, pos.y);
       ctx.fillText(ch.current, pos.x, pos.y);
     }
-
-    ctx.shadowBlur = 0;
-    ctx.shadowColor = "transparent";
   }
 
   isComplete(): boolean {
