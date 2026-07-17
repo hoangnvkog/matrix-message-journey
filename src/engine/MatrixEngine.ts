@@ -9,6 +9,7 @@ import { MessageScene } from "../scenes/MessageScene.js";
 import { ScatterScene } from "../scenes/ScatterScene.js";
 import { EndingScene } from "../scenes/EndingScene.js";
 import { MuteButton } from "../ui/MuteButton.js";
+import { NextButton } from "../ui/NextButton.js";
 
 function createPlaceholderHandler(label: string): StateHandler {
   return {
@@ -34,6 +35,7 @@ export class MatrixEngine {
   private activeEndingScene: EndingScene | null = null;
   private audio: AudioManager;
   private muteButton: MuteButton;
+  private nextButton: NextButton;
   private responsive: ResponsiveManager;
 
   /** Rain opacity multiplier (1 = full, 0 = invisible) */
@@ -58,6 +60,11 @@ export class MatrixEngine {
     this.muteButton.onClick(() => {
       const muted = this.audio.toggleMute();
       this.muteButton.updateIcon(muted);
+    });
+
+    this.nextButton = new NextButton();
+    this.nextButton.onClick(() => {
+      this.stateMachine.transitionTo(AppState.Scatter);
     });
 
     this.renderer.setOnFrame((dt) => this.update(dt));
@@ -155,48 +162,23 @@ export class MatrixEngine {
       })(this),
     );
 
-    // WaitingInput — wait for user click/tap/space, then advance to Scatter
+    // WaitingInput — user taps envelope button to advance to Scatter
     this.stateMachine.register(
       AppState.WaitingInput,
       new (class implements StateHandler {
         private engine: MatrixEngine;
-        private lastInputAt = 0;
-        private onPointer = (e: PointerEvent): void => {
-          e.preventDefault();
-          this.handleInput();
-        };
-        private onTouch = (e: TouchEvent): void => {
-          // Prevent default to stop zoom, ghost clicks, and scroll
-          e.preventDefault();
-          this.handleInput();
-        };
-        private onKey = (e: KeyboardEvent): void => {
-          if (e.code === "Space" || e.code === "Enter") {
-            e.preventDefault();
-            this.handleInput();
-          }
-        };
         constructor(engine: MatrixEngine) {
           this.engine = engine;
         }
-        private handleInput(): void {
-          const now = performance.now();
-          if (now - this.lastInputAt < 300) return;
-          this.lastInputAt = now;
-          this.engine.getStateMachine().transitionTo(AppState.Scatter);
-        }
         enter(): void {
-          console.log("[State] → WaitingInput (tap to continue)");
-          // pointerdown covers mouse clicks; touchstart covers real taps on mobile
-          window.addEventListener("pointerdown", this.onPointer, { passive: false });
-          window.addEventListener("touchstart", this.onTouch, { passive: false });
-          window.addEventListener("keydown", this.onKey);
+          console.log("[State] → WaitingInput (tap envelope to continue)");
+          // Show the envelope / next button
+          this.engine.getNextButton().show();
         }
         execute(_dt: number): void {}
         exit(): void {
-          window.removeEventListener("pointerdown", this.onPointer);
-          window.removeEventListener("touchstart", this.onTouch);
-          window.removeEventListener("keydown", this.onKey);
+          // Hide the envelope / next button
+          this.engine.getNextButton().hide();
         }
       })(this),
     );
@@ -389,6 +371,10 @@ export class MatrixEngine {
 
   getAudio(): AudioManager {
     return this.audio;
+  }
+
+  getNextButton(): NextButton {
+    return this.nextButton;
   }
 
   getResponsive(): ResponsiveManager {
