@@ -23,8 +23,6 @@ const FONT_SIZE = settings.reveal.fontSize;
 const LINE_HEIGHT = settings.reveal.lineHeight;
 const FONT_FAMILY = settings.reveal.font;
 const CACHED_FONT = `bold ${FONT_SIZE}px ${FONT_FAMILY}`;
-const GLOW_COLOR = settings.reveal.color;
-const GLOW_BLUR = settings.glow.spread;
 const CHAR_WIDTH = FONT_SIZE * 0.6;
 const SPACE_WIDTH = FONT_SIZE * 0.3;
 
@@ -150,12 +148,12 @@ export class MessageRenderer {
       ctx.fillStyle = "#000000";
       ctx.fillRect(bx, by, bw, bh);
 
-      // Matrix green border (1px glow)
-      ctx.strokeStyle = "rgba(0, 255, 65, 0.5)";
-      ctx.lineWidth = 1;
+      // Matrix green border (2px, stronger glow)
+      ctx.strokeStyle = "rgba(0, 255, 65, 0.8)";
+      ctx.lineWidth = 2;
       ctx.shadowColor = "#00ff41";
-      ctx.shadowBlur = 8;
-      ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+      ctx.shadowBlur = 12;
+      ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
       ctx.shadowBlur = 0;
 
       ctx.restore();
@@ -165,26 +163,32 @@ export class MessageRenderer {
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
 
-    // Pass 1: Scrambling characters (no shadow)
+    // Pass 1: Scrambling characters — brighter, with subtle stroke for contrast
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "rgba(0, 255, 65, 0.5)";
+    ctx.fillStyle = "rgba(0, 255, 65, 0.85)";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.lineWidth = 2;
 
     for (let i = 0; i < len; i++) {
       const ch = this.chars[i];
       const pos = this.positions[i];
       if (!ch || !pos || ch.settled) continue;
+      ctx.strokeText(ch.current, pos.x, pos.y);
       ctx.fillText(ch.current, pos.x, pos.y);
     }
 
-    // Pass 2: Settled characters (with glow)
-    ctx.shadowColor = GLOW_COLOR;
-    ctx.shadowBlur = GLOW_BLUR;
-    ctx.fillStyle = GLOW_COLOR;
+    // Pass 2: Settled characters — BRIGHT WHITE with strong green glow + black stroke
+    ctx.shadowColor = "#00ff41";
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 3;
 
     for (let i = 0; i < len; i++) {
       const ch = this.chars[i];
       const pos = this.positions[i];
       if (!ch || !pos || !ch.settled) continue;
+      ctx.strokeText(ch.current, pos.x, pos.y);
       ctx.fillText(ch.current, pos.x, pos.y);
     }
 
