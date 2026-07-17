@@ -135,8 +135,8 @@ export class MessageRenderer {
     }
 
     if (minX < Infinity) {
-      const padX = 48;
-      const padY = 36;
+      const padX = 56;
+      const padY = 40;
       const bx = minX - padX;
       const by = minY - padY;
       const bw = maxX - minX + padX * 2;
@@ -144,17 +144,14 @@ export class MessageRenderer {
 
       ctx.save();
 
-      // FULL opaque black backdrop — completely blocks rain
+      // FULL opaque black backdrop — blocks rain completely
       ctx.fillStyle = "#000000";
       ctx.fillRect(bx, by, bw, bh);
 
-      // Matrix green border (2px, stronger glow)
-      ctx.strokeStyle = "rgba(0, 255, 65, 0.8)";
-      ctx.lineWidth = 2;
-      ctx.shadowColor = "#00ff41";
-      ctx.shadowBlur = 12;
-      ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
-      ctx.shadowBlur = 0;
+      // Clean green border — no shadow/blur
+      ctx.strokeStyle = "rgba(0, 255, 65, 0.6)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
 
       ctx.restore();
     }
@@ -162,27 +159,23 @@ export class MessageRenderer {
     ctx.font = CACHED_FONT;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
-
-    // Pass 1: Scrambling characters — brighter, with subtle stroke for contrast
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "rgba(0, 255, 65, 0.85)";
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-    ctx.lineWidth = 2;
+    ctx.shadowColor = "transparent";
+
+    // Pass 1: Scrambling characters — green, no shadow
+    ctx.fillStyle = "rgba(0, 255, 65, 0.8)";
 
     for (let i = 0; i < len; i++) {
       const ch = this.chars[i];
       const pos = this.positions[i];
       if (!ch || !pos || ch.settled) continue;
-      ctx.strokeText(ch.current, pos.x, pos.y);
       ctx.fillText(ch.current, pos.x, pos.y);
     }
 
-    // Pass 2: Settled characters — BRIGHT WHITE with strong green glow + black stroke
-    ctx.shadowColor = "#00ff41";
-    ctx.shadowBlur = 16;
+    // Pass 2: Settled characters — BRIGHT WHITE, crisp stroke, NO shadow/glow
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
 
     for (let i = 0; i < len; i++) {
       const ch = this.chars[i];
@@ -191,9 +184,6 @@ export class MessageRenderer {
       ctx.strokeText(ch.current, pos.x, pos.y);
       ctx.fillText(ch.current, pos.x, pos.y);
     }
-
-    ctx.shadowBlur = 0;
-    ctx.shadowColor = "transparent";
   }
 
   isComplete(): boolean {
