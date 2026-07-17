@@ -137,23 +137,29 @@ export class MessageRenderer {
     }
 
     if (minX < Infinity) {
-      const padX = 24;
-      const padY = 16;
-      // Radial gradient: dark center → transparent edges
-      const cx = (minX + maxX) / 2;
-      const cy = (minY + maxY) / 2;
-      const rx = (maxX - minX) / 2 + padX;
-      const ry = (maxY - minY) / 2 + padY;
-      const radius = Math.max(rx, ry);
-
-      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-      grad.addColorStop(0, "rgba(0, 0, 0, 0.75)");
-      grad.addColorStop(0.6, "rgba(0, 0, 0, 0.5)");
-      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      const padX = 40;
+      const padY = 30;
+      const bx = minX - padX;
+      const by = minY - padY;
+      const bw = maxX - minX + padX * 2;
+      const bh = maxY - minY + padY * 2;
 
       ctx.save();
+
+      // Solid dark backdrop — high contrast
+      ctx.fillStyle = "rgba(0, 0, 0, 0.82)";
+      ctx.fillRect(bx, by, bw, bh);
+
+      // Subtle radial glow at center
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const radius = Math.max(bw, bh) * 0.7;
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      grad.addColorStop(0, "rgba(0, 40, 10, 0.3)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = grad;
-      ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+      ctx.fillRect(bx, by, bw, bh);
+
       ctx.restore();
     }
 
