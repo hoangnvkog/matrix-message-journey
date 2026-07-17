@@ -1,4 +1,4 @@
-import { Howl } from "howler";
+import { Howl, Howler } from "howler";
 import { settings } from "../config/settings.js";
 
 type SoundName = "rain" | "reveal" | "scatter" | "ending";
@@ -13,11 +13,17 @@ interface SoundEntry {
  *
  * Preloads all sounds on init. Provides play/stop/mute controls.
  * Gracefully handles missing audio files.
+ *
+ * Browser autoplay policy: Web Audio can only be (re)started after a user
+ * gesture. We buffer any play() calls made before the first gesture and
+ * replay them once the user interacts with the page.
  */
 export class AudioManager {
   private sounds = new Map<SoundName, SoundEntry>();
   private muted = false;
   private initialized = false;
+  private unlocked = false;
+  private pendingPlays: SoundName[] = [];
 
   /** Preload all audio files. Call once on app init. */
   init(): void {
@@ -45,11 +51,64 @@ export class AudioManager {
     }
 
     this.initialized = true;
+    this.registerUnlockHandlers();
+  }
+
+  /**
+   * Register one-time listeners that mark the audio system as "unlocked"
+   * once the user interacts with the page. This is required by Chrome
+   * (and other modern browsers) to satisfy the autoplay policy.
+   */
+  private registerUnlockHandlers(): void {
+    const unlock = (): void => {
+      if (this.unlocked) return;
+      this.unlocked = true;
+
+      // Force-resume the AudioContext (Howler exposes a noop if it can't).
+      try {
+        if (Howler.ctx && Howler.ctx.state === "suspended") {
+          void Howler.ctx.resume();
+        }
+      } catch {
+        /* ignore */
+      }
+
+      // Drain queued plays. For sounds that are still relevant to current
+      // state, re-trigger them. We only re-trigger "rain" (looping ambient)
+      // to keep the behavior predictable; one-shots (reveal/scatter/ending)
+      // that were queued before user gesture are simply dropped to avoid
+      // playing stale audio events.
+      if (!this.muted) {
+        const queued = this.pendingPlays;
+        this.pendingPlays = [];
+        if (queued.includes("rain")) {
+          this.play("rain");
+        }
+      } else {
+        this.pendingPlays = [];
+      }
+
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+
+    window.addEventListener("pointerdown", unlock, { passive: true });
+    window.addEventListener("keydown", unlock);
+    window.addEventListener("touchstart", unlock, { passive: true });
   }
 
   /** Play a named sound. */
   play(name: SoundName): void {
     if (this.muted) return;
+
+    // Before the first user gesture, Web Audio can't start. Buffer the
+    // request and replay on unlock so the ambient rain isn't lost.
+    if (!this.unlocked) {
+      this.pendingPlays.push(name);
+      return;
+    }
+
     const entry = this.sounds.get(name);
     if (entry) {
       entry.howl.volume(entry.volume);
@@ -91,5 +150,10 @@ export class AudioManager {
 
   isMuted(): boolean {
     return this.muted;
+  }
+
+  /** Whether the audio system has been unlocked by a user gesture. */
+  isUnlocked(): boolean {
+    return this.unlocked;
   }
 }
